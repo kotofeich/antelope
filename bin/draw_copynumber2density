@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import pylab as pl
 import os
          
-color_names = ['purple','firebrick','darkgoldenrod','green','cyan','yellow','blue','black','red','gray','coral','fuchsia','plum', 'gold','navy','springgreen','burlywood','darkorange','darkgreen','crimson','darkkhaki','darkorange','dodgerblue','darksalmon']
+color_names = ['purple','firebrick','darkgoldenrod','green', 'darkorange', 'fuchsia', 'cyan','yellow','blue','black','red','gray','coral','plum', 'gold','navy','springgreen','burlywood','darkgreen','crimson','darkkhaki','darkorange','dodgerblue','darksalmon']
 
 def collect_colors():
     colors = []
