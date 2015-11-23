@@ -1,0 +1,66 @@
+#!/usr/bin/python
+
+import os
+import argparse
+import subprocess
+from time import gmtime, strftime
+
+BIN = './'
+
+def get_time():
+    return strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+
+def get_name(path):
+    return os.path.basename(path).split('.')[0]
+
+def get_benchmark_log(working_dir):
+    return 'command time -a -o ' + os.path.join(working_dir, 'benchmark_log.txt')
+
+def main(fastq, reference, working_dir):
+    print get_time()
+    print 'splitting reads'
+    processes = []
+    commands = []
+    split_reads = []
+    for e in fastq:
+        name = get_name(e)
+        split_reads.append(os.path.join(working_dir,name+'.fasta'))
+        commands.append(' '.join([os.path.join(BIN,'split_reads'), e, '>', split_reads[-1]]))
+    processes = [subprocess.Popen(cmd, shell=True) for cmd in commands]
+    for p in processes: p.wait()
+    print commands
+    print get_time()
+    print 'merging results into one file'
+    command = 'cat '
+    for e in split_reads:
+        command += e
+    split_reads = os.path.join(working_dir, 'split_reads.fa')
+    command += '> ' + split_reads 
+    subprocess.call(command, shell=True)
+    print command
+    print get_time()
+    print 'splitting reads into chunks'
+    chunk_dir = os.path.join(working_dir,'chunks')
+    if not os.path.exists(chunk_dir):
+        os.mkdir(chunk_dir)
+    command = get_benchmark_log(working_dir) + ' fastasplit -c 88 ' + split_reads + ' ' + chunk_dir
+    print command
+    subprocess.call(command, shell=True)
+    print get_time()
+    print 'run read mapping'
+    output_dir = os.path.join(working_dir,'map')
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    command = ' '.join([get_benchmark_log(working_dir), os.path.join(BIN,'run_mrfast_parallel'), chunk_dir, reference, output_dir])
+    print command
+    subprocess.call(command, shell=True)
+    print get_time()
+    print 'completed'
+     
+if __name__ == '__main__' :
+    parser = argparse.ArgumentParser()
+    parser.add_argument('reads', nargs = '+', help='fastq')
+    parser.add_argument('reference')
+    parser.add_argument('working_dir')
+    args = parser.parse_args()
+    main(args.reads, args.reference, args.working_dir)
